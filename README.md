@@ -1,1 +1,1 @@
-### This repo coontains lexical analysis for compilers in Python.
+### This repo contains lexical analysis for compilers in Python.
