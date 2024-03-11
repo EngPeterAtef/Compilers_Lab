@@ -1,0 +1,82 @@
+#Finally, we minimize the DFA we got from Powerset Construction
+#The minimized DFA is canonical : Every single correct implementation of DFA minization should agree on it 
+
+#Let's go
+
+subroutine min-DFA of 
+                Input: DFA 
+                Output: DFA 
+    
+
+    dfa-accept-states = dfa.accept as set
+    dfa-reject-states = {}
+    dfa-state-to-min-dfa-state = new map
+    for every state in dfa.states {
+        #Mesh m7taga 7aga ya3ny
+        if state is not in dfa-accept-states {
+             add state to dfa-reject-states
+             dfa-state-to-min-dfa-state[state] = dfa-reject-states
+        }
+        else {
+             dfa-state-to-min-dfa-state[state] = dfa-accept-states
+        }
+    }
+
+    min-dfa-states = {dfa-accept-states,dfa-reject-states}
+
+    more-states-to-split = True
+    while more-states-to-split {
+        more-states-to-split = False
+
+        for every min-dfa-state in min-dfa-states {
+            if size of min-dfa-state > 1 {
+
+                split-states = new map
+                for each dfa-state in min-dfa-state {
+                    dfa-state-transition-table = new map
+
+                    for every transition (a,b,chars) in dfa.transitions {
+                        if a is dfa-state {
+                            dfa-state-transition-table[chars] = dfa-state-to-min-dfa-state[b]
+                        }
+                    }
+
+                    if dfa-state-transition-table does not exist in split-states {
+                        split-states[dfa-state-transition-table] = {dfa-state}
+                    }
+                    else {
+                        add dfa-state to split-states[dfa-state-transition-table]
+                    }
+                }
+
+                if size of split-states > 1 {
+                    remove min-dfa-state from min-dfa-states 
+                    for each (_, splitted-min-dfa-state) in split-states {
+                        add splitted-min-dfa-state to min-dfa-states 
+                        for every dfa-state in splitted-min-dfa-state {
+                            dfa-state-to-min-dfa-state[dfa-state] = splitted-min-dfa-state
+                        }
+                    }
+                    more-states-to-split = True
+                }
+            }
+        }
+    }
+
+    min-dfa-start = dfa-state-to-min-dfa-state[dfa.start]
+    
+    min-dfa-accept = {}
+    for every state in dfa.accept {
+        min-dfa-accept.push(dfa-state-to-min-dfa-state[state])
+    }
+    min-dfa-transitions = {}
+    for every transition (a,b,chars) in dfa.transitions {
+        min-dfa-transitions.push(new Edge(dfa-state-to-min-dfa-state[a],
+                                          dfa-state-to-min-dfa-state[b],
+                                          chars))
+    }
+
+    return new DFA(min-dfa-start,
+                   min-dfa-accept as list,
+                   min-dfa-states as list,
+                   min-dfa-transitions as list)
