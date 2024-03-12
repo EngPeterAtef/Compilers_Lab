@@ -1,6 +1,8 @@
 from enum import Enum, auto
 from dataclasses import dataclass
 
+EPSILON = 'ϵ'
+
 class TokenType(Enum):
     OR = auto()                 # |
     STAR = auto()               # *
@@ -46,10 +48,6 @@ class QuestionMarkAstNode(AstNode):
 
 @dataclass
 class LiteralCharacterAstNode(AstNode):
-    char: str
-
-@dataclass
-class DotAstNode(AstNode):
     char: str
 
 @dataclass
@@ -157,7 +155,7 @@ def parse_base(tokens, current_token):
     
     if token.token_type == TokenType.DOT:
         # Epsilon because dot match any character
-        return DotAstNode(char='ϵ'), current_token
+        return LiteralCharacterAstNode(char=EPSILON), current_token
     
     if token.token_type == TokenType.OPEN_PAREN:
         expression, current_token = parse_regex(tokens, current_token)
