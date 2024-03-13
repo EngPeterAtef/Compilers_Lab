@@ -1,5 +1,9 @@
 import re
 from parser_classes import *
+import json
+import graphviz
+import matplotlib.pyplot as plt
+import networkx as nx
 
 class State:
     pass
@@ -24,10 +28,17 @@ class NFA_CLASS:
         if not self.check_regex(regex):
             raise ValueError(f"Invalid regular expression: {regex}")
         
-        self.regex = regex
-        self.tokens = []
-        self.ast = None
-        self.nfa = None
+        self._regex = regex
+        self._tokens = []
+        self._ast = None
+        self._nfa = None
+        self._nfa_json = None
+
+        self.tokenize()
+        self.parse()
+        self.AST_to_NFA()
+        self.nfa_to_json()
+        self.visualize()
     
     def check_regex(self, regex):
         """
@@ -62,7 +73,7 @@ class NFA_CLASS:
         token_stream = []
         prev_char = None
         
-        for char in self.regex:
+        for char in self._regex:
             if char == escape:
                 prev_char = char
                 continue
@@ -74,7 +85,7 @@ class NFA_CLASS:
 
             prev_char = char
         
-        self.tokens = token_stream
+        self._tokens = token_stream
     
     def parse(self):
         """
@@ -91,8 +102,8 @@ class NFA_CLASS:
         sq-bracket-content      -> LITERAL
                                 | LITERAL DASH LITERAL
         """
-        expression, _ = parse_regex(self.tokens, 0)
-        self.ast = expression
+        expression, _ = parse_regex(self._tokens, 0)
+        self._ast = expression
     
     
     def construct_nfa(self, node):
@@ -255,15 +266,83 @@ class NFA_CLASS:
         return NFA(start, accept, states, transitions)
     
     def AST_to_NFA(self):
-        self.nfa = self.construct_nfa(self.ast)
+        self._nfa = self.construct_nfa(self._ast)
+
+    def nfa_to_json(self):
+        nfa = self._nfa
+        json_data = {}
+        
+        address_to_name = {}
+        from_state = {}
+        
+        for _, state in enumerate(nfa.states):
+            name = f"S{str(nfa.states.index(state))}"
+            address_to_name[state] = name
+            from_state[name] = []
+        
+        for transition in nfa.transitions:
+            # Get the characters that are needed for the transition
+            chars_str = []
+            for char in transition.characters:
+                if isinstance(char, tuple):
+                    chars_str.append(f"({char[0]}-{char[1]})")
+                else:
+                    chars_str.append(char)
+            chars_str = " | ".join(sorted(chars_str))
+            
+            # Get all the states that the transition goes to
+            from_state[address_to_name[transition.from_]].append({"to": address_to_name[transition.to_], "char": chars_str})
+        
+        # Extracting starting state
+        json_data["startingState"] = address_to_name[nfa.start]
+        
+        for _, state in enumerate(from_state):
+            epsilons = 1
+            json_data[state] = {
+                "isTerminatingState": state == address_to_name[nfa.accept],
+            }
+            
+            transitions = {}
+            for transition in from_state[state]:
+                if transition['char'] == 'epsilon':
+                    transitions[f'epsilon{epsilons}'] = transition['to']
+                    epsilons += 1
+                else:
+                    transitions[transition['char']] = transition['to']
+            
+            # Check if transitions is empty
+            if len(transitions) > 0:
+                json_data[state].update(transitions)
+        
+        self._nfa_json = json_data
+    
+    def visualize(self, name='./nfa.gv'):
+        json_data = self._nfa_json
+        
+        try:
+            graph = graphviz.Digraph(engine='dot')
+            
+            for state, transitions in json_data.items():
+                if state == 'startingState':
+                    continue
+                
+                if transitions.get('isTerminatingState', False):
+                    graph.node(state, shape='doublecircle')
+                else:
+                    graph.node(state, shape='circle')
+                
+                for char, next_state in transitions.items():
+                    if char == 'isTerminatingState':
+                        continue
+                    graph.edge(state, next_state, label=char)
+                    
+            
+            graph.render(name)
+        except:
+            pass
 
 regex = "[A-Za-z]+[0-9]*"
 # regex = "ab*c+de?(f|g|h)|mr|n|[p-qs0-9]"
+# regex = "ab"
 
 nfa = NFA_CLASS(regex)
-nfa.tokenize()
-nfa.parse()
-nfa.AST_to_NFA()
-
-# print(nfa.tokens)
-# print(nfa.ast)

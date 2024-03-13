@@ -1,7 +1,7 @@
 from enum import Enum, auto
 from dataclasses import dataclass
 
-EPSILON = 'ϵ'
+EPSILON = 'epsilon'
 
 class TokenType(Enum):
     OR = auto()                 # |
