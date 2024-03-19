@@ -155,7 +155,7 @@ def parse_base(tokens, current_token):
     
     if token.token_type == TokenType.DOT:
         # Epsilon because dot match any character
-        return LiteralCharacterAstNode(char=EPSILON), current_token
+        return LiteralCharacterAstNode(char='.'), current_token
     
     if token.token_type == TokenType.OPEN_PAREN:
         expression, current_token = parse_regex(tokens, current_token)
