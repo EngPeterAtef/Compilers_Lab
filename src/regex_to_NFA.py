@@ -275,8 +275,8 @@ class NFA_CLASS:
     
     def visualize(self, name='./nfa.gv'):
         json_data = self._nfa_json
-        graph_visualize = GraphVisualize(name,json_data)
-        if graph_visualize.graph_visualize():
+        graph_visualize = GraphVisualize()
+        if graph_visualize.graph_visualize(name,json_data):
             print(f"Visualization of the NFA is saved in {name}")
         else:
             print("Error: Visualization failed")
