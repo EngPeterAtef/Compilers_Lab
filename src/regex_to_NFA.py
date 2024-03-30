@@ -4,6 +4,7 @@ import json
 import matplotlib.pyplot as plt
 import networkx as nx
 from graph_visualize import GraphVisualize 
+from json_serialize import JsonSerialize
 class State:
     pass
 
@@ -269,51 +270,8 @@ class NFA_CLASS:
 
     def nfa_to_json(self):
         nfa = self._nfa
-        json_data = {}
-        
-        address_to_name = {}
-        from_state = {}
-        
-        for _, state in enumerate(nfa.states):
-            name = f"S{str(nfa.states.index(state))}"
-            address_to_name[state] = name
-            from_state[name] = []
-        
-        for transition in nfa.transitions:
-            # Get the characters that are needed for the transition
-            chars_str = []
-            for char in transition.characters:
-                if isinstance(char, tuple):
-                    chars_str.append(f"({char[0]}-{char[1]})")
-                else:
-                    chars_str.append(char)
-            chars_str = " | ".join(sorted(chars_str))
-            
-            # Get all the states that the transition goes to
-            from_state[address_to_name[transition.from_]].append({"to": address_to_name[transition.to_], "char": chars_str})
-        
-        # Extracting starting state
-        json_data["startingState"] = address_to_name[nfa.start]
-        
-        for _, state in enumerate(from_state):
-            epsilons = 1
-            json_data[state] = {
-                "isTerminatingState": state == address_to_name[nfa.accept],
-            }
-            
-            transitions = {}
-            for transition in from_state[state]:
-                if transition['char'] == 'epsilon':
-                    transitions[f'epsilon{epsilons}'] = transition['to']
-                    epsilons += 1
-                else:
-                    transitions[transition['char']] = transition['to']
-            
-            # Check if transitions is empty
-            if len(transitions) > 0:
-                json_data[state].update(transitions)
-        
-        self._nfa_json = json_data
+        json_serialize = JsonSerialize()
+        self._nfa_json = json_serialize.nfa_json_serialize(nfa)
     
     def visualize(self, name='./nfa.gv'):
         json_data = self._nfa_json
@@ -322,7 +280,7 @@ class NFA_CLASS:
             print(f"Visualization of the NFA is saved in {name}")
         else:
             print("Error: Visualization failed")
-
+        del graph_visualize
 
 regex = "[A-Za-z]+[0-9]*"
 # regex = "ab*c+de?(f|g|h)|mr|n|[p-qs0-9]"
