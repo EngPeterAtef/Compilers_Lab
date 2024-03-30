@@ -272,7 +272,8 @@ class NFA_CLASS:
         nfa = self._nfa
         json_serialize = JsonSerialize()
         self._nfa_json = json_serialize.nfa_json_serialize(nfa)
-    
+        del json_serialize
+        
     def visualize(self, name='./nfa.gv'):
         json_data = self._nfa_json
         graph_visualize = GraphVisualize()
