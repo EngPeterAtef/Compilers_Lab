@@ -1,10 +1,9 @@
 import re
 from parser_classes import *
 import json
-import graphviz
 import matplotlib.pyplot as plt
 import networkx as nx
-
+from graph_visualize import GraphVisualize 
 class State:
     pass
 
@@ -318,28 +317,12 @@ class NFA_CLASS:
     
     def visualize(self, name='./nfa.gv'):
         json_data = self._nfa_json
-        
-        try:
-            graph = graphviz.Digraph(engine='dot')
-            
-            for state, transitions in json_data.items():
-                if state == 'startingState':
-                    continue
-                
-                if transitions.get('isTerminatingState', False):
-                    graph.node(state, shape='doublecircle')
-                else:
-                    graph.node(state, shape='circle')
-                
-                for char, next_state in transitions.items():
-                    if char == 'isTerminatingState':
-                        continue
-                    graph.edge(state, next_state, label=char)
-                    
-            
-            graph.render(name)
-        except:
-            pass
+        graph_visualize = GraphVisualize(name,json_data)
+        if graph_visualize.graph_visualize():
+            print(f"Visualization of the NFA is saved in {name}")
+        else:
+            print("Error: Visualization failed")
+
 
 regex = "[A-Za-z]+[0-9]*"
 # regex = "ab*c+de?(f|g|h)|mr|n|[p-qs0-9]"
