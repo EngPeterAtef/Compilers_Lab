@@ -205,5 +205,11 @@ class DFA_CLASS:
         Returns:
             DFA: minimized DFA object
         """
-        minimized_dfa = DFA()
+        minimized_dfa = DFA(
+            start=self._dfa.start,
+            accept=self._dfa.accept,
+            non_accept=self._dfa.non_accept,
+            states=self._dfa.states,
+            transitions=self._dfa.transitions,
+        )
         return minimized_dfa
