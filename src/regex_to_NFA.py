@@ -1,10 +1,8 @@
 import re
 from parser_classes import *
-import json
-import matplotlib.pyplot as plt
-import networkx as nx
 from graph_visualize import GraphVisualize 
 from json_serialize import JsonSerialize
+
 class State:
     pass
 
@@ -31,7 +29,7 @@ class NFA_CLASS:
         self._regex = regex
         self._tokens = []
         self._ast = None
-        self._nfa = None
+        self.nfa = None
         self._nfa_json = None
 
         self.tokenize()
@@ -266,10 +264,10 @@ class NFA_CLASS:
         return NFA(start, accept, states, transitions)
     
     def AST_to_NFA(self):
-        self._nfa = self.construct_nfa(self._ast)
+        self.nfa = self.construct_nfa(self._ast)
 
     def nfa_to_json(self):
-        nfa = self._nfa
+        nfa = self.nfa
         json_serialize = JsonSerialize()
         self._nfa_json = json_serialize.nfa_json_serialize(nfa)
         del json_serialize
@@ -283,8 +281,9 @@ class NFA_CLASS:
             print("Error: Visualization failed")
         del graph_visualize
 
-regex = "[A-Za-z]+[0-9]*"
+# regex = "[A-Za-z]+[0-9]*"
 # regex = "ab*c+de?(f|g|h)|mr|n|[p-qs0-9]"
-# regex = "ab"
+regex = "ab"
 
 nfa = NFA_CLASS(regex)
+print(nfa.nfa.start)
