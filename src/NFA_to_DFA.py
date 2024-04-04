@@ -105,7 +105,6 @@ class DFA_CLASS:
         while to_visit:
             # get the first state in the list of states to visit
             current_state = to_visit.pop(0)
-            print("Current State: ", current_state)
             # for each input in the inputs list
             for input_ in self.inputs:
                 # get the move of the current state using the input
@@ -113,7 +112,6 @@ class DFA_CLASS:
                 # get the epsilon closure of the move set
                 for state in move:
                     move = move.union(self.epsilon_closure(nfa, state))
-                print(f"Input: {input_}, Move: {move}")
                 # if the move set is not empty
                 if move:
                     # add the move set to the list of states of the DFA
@@ -199,18 +197,102 @@ class DFA_CLASS:
             print("Error: Visualization DFA failed")
         del graph_visualize
 
-    def minimize_dfa(self) -> DFA:
+    def minimize_dfa(self, inputs) -> DFA:
         """_summary_
         This function is used to minimize the DFA
+        Args:
+            inputs (list): list of inputs of the NFA (Terminals in Regex)
         Returns:
             DFA: minimized DFA object
         """
-
+        # list of accepting states of the DFA
+        accept = self._dfa.accept
+        # list of non accepting states of the DFA
+        non_accept = self._dfa.non_accept
+        # the current state of the DFA
+        pi = [set(accept), set(non_accept)]
+        # print("Initial Partition: ", pi)
+        # flag to tell if there is a change in the partition
+        change = True
+        while change:
+            change = False
+            # create a new partition
+            new_pi = []
+            for group in pi:
+                if len(group) > 1:
+                    # the splited states in the group
+                    # key is the transition table for the state
+                    splitted_states = {}
+                    for state in group:
+                        # transion table for each state
+                        state_transition_table = {}
+                        for input_ in inputs:
+                            for transition in self._dfa.transitions:
+                                if (
+                                    transition.from_ == state
+                                    and input_ in transition.characters
+                                ):
+                                    if input_ not in state_transition_table:
+                                        state_transition_table[input_] = set()
+                                    state_transition_table[input_].add(transition.to_)
+                        str_temp = str(state_transition_table)
+                        # print("Transition Table/: ", str_temp)
+                        if str_temp not in splitted_states:
+                            splitted_states[str_temp] = set()
+                        splitted_states[str_temp].add(state)
+                    # print("Splitted States: ", splitted_states)
+                    # if there is more than one transition table for the group
+                    if len(splitted_states) > 1:
+                        # change is True to check on the new partitions
+                        change = True
+                        # add the splited states to the new partition
+                        for value in splitted_states.values():
+                            new_pi.append(set(value))
+                    else:
+                        # if there is only one transition table for the group
+                        # add the group to the new partition
+                        new_pi.append(group)
+            # if there is a change in the partition
+            if change:
+                pi = new_pi
+                # print("New Partition: ", pi)
+        # list of states of the minimized DFA
+        min_states = []
+        # list of transitions of the minimized DFA
+        min_transitions = []
+        # list of accepting states of the minimized DFA
+        min_accept = []
+        # list of non accepting states of the minimized DFA
+        min_non_accept = []
+        # start state of the minimized DFA
+        start = None
+        # create the state sof the minimized DFA
+        for i, group in enumerate(pi):
+            state = State(name=f"S{i}")
+            min_states.append(state)
+            if group.intersection(self._dfa.accept):
+                min_accept.append(state)
+            else:
+                min_non_accept.append(state)
+            # get the start state of the minimized DFA
+            if self._dfa.start in group:
+                start = state
+        # create the transitions of the minimized DFA
+        for transition in self._dfa.transitions:
+            for i, group in enumerate(pi):
+                if transition.from_ in group:
+                    from_ = min_states[i]
+                if transition.to_ in group:
+                    to_ = min_states[i]
+            min_transitions.append(
+                Edge(from_=from_, to_=to_, characters=transition.characters)
+            )
+        # create a DFA object for the minimized DFA
         minimized_dfa = DFA(
-            start=self._dfa.start,
-            accept=self._dfa.accept,
-            non_accept=self._dfa.non_accept,
-            states=self._dfa.states,
-            transitions=self._dfa.transitions,
+            start=start,
+            accept=min_accept,
+            non_accept=min_non_accept,
+            states=min_states,
+            transitions=min_transitions,
         )
         return minimized_dfa

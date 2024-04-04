@@ -83,6 +83,3 @@ class JsonSerialize:
                         "".join(list(transition.characters))
                     ] = transition.to_.name
         return json_data
-
-    def dfa_min_json_serialize(self, dfa_min):
-        json_data = {}
