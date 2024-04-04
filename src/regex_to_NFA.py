@@ -2,6 +2,7 @@ import re
 from parser_classes import *
 from graph_visualize import GraphVisualize
 from json_serialize import JsonSerialize
+import json
 
 
 class State:
@@ -270,15 +271,21 @@ class NFA_CLASS:
         self.nfa = self.construct_nfa(self._ast)
 
     def nfa_to_json(self):
+        """
+        This function is used to convert the NFA to a JSON format
+        """
         nfa = self.nfa
         json_serialize = JsonSerialize()
         self.nfa_json = json_serialize.nfa_json_serialize(nfa)
         del json_serialize
+        # store the nfa json in a file
+        with open("nfa.json", "w") as f:
+            json.dump(self.nfa_json, f, indent=4)
 
     def visualize(self, name="./nfa.gv"):
         json_data = self.nfa_json
         graph_visualize = GraphVisualize()
-        if graph_visualize.graph_visualize(name, json_data):
+        if graph_visualize.nfa_graph_visualize(name, json_data):
             print(f"Visualization of the NFA is saved in {name}")
         else:
             print("Error: Visualization failed")
