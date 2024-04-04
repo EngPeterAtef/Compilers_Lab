@@ -13,8 +13,7 @@ class State:
 class Edge:
     from_: State
     to_: State
-    characters: set  # of chars (literals, epsilon) and pairs of chars (for ranges)
-
+    characters: str  # of chars (literals, epsilon)
 
 @dataclass
 class NFA:
@@ -34,8 +33,8 @@ class NFA_CLASS:
         self._regex = regex
         self._tokens = []
         self._ast = None
-        self.nfa = None
-        self.nfa_json = None
+        self._nfa = None
+        self._nfa_json = None
 
         self.tokenize()
         self.parse()
@@ -117,10 +116,8 @@ class NFA_CLASS:
             return self.construct_star_plus_nfa(node)
         elif isinstance(node, QuestionMarkAstNode):
             return self.construct_question_mark_nfa(node)
-        elif isinstance(node, LiteralCharacterAstNode) or isinstance(
-            node, CharacterClassAstNode
-        ):
-            return self.construct_literal_character_class_nfa(node)
+        elif isinstance(node, LiteralCharacterAstNode):
+            return self.construct_literal_class_nfa(node)
 
     def construct_or_nfa(self, node):
         # If we have regex A|B
@@ -134,17 +131,17 @@ class NFA_CLASS:
         accept = State()
 
         # Link the start state with both the start of A's NFA and B's NFA with an epsilon transitions
-        start_transition_1 = Edge(from_=start, to_=left_nfa.start, characters={EPSILON})
+        start_transition_1 = Edge(from_=start, to_=left_nfa.start, characters=EPSILON)
         start_transition_2 = Edge(
-            from_=start, to_=right_nfa.start, characters={EPSILON}
+            from_=start, to_=right_nfa.start, characters=EPSILON
         )
 
         # Link the accept state with both the accept of A's NFA and B's NFA with an epsilon transitions
         final_transition_1 = Edge(
-            from_=left_nfa.accept, to_=accept, characters={EPSILON}
+            from_=left_nfa.accept, to_=accept, characters=EPSILON
         )
         final_transition_2 = Edge(
-            from_=right_nfa.accept, to_=accept, characters={EPSILON}
+            from_=right_nfa.accept, to_=accept, characters=EPSILON
         )
 
         # Finalize the Or NFA and return it
@@ -168,7 +165,7 @@ class NFA_CLASS:
 
         # Link the two NFAs by connecting the accept state of A to the start state of B
         final_transition = Edge(
-            from_=left_nfa.accept, to_=right_nfa.start, characters={EPSILON}
+            from_=left_nfa.accept, to_=right_nfa.start, characters=EPSILON
         )
 
         # Finalize the Seq NFA and return it
@@ -188,19 +185,19 @@ class NFA_CLASS:
         accept = State()
 
         # Link the new start to the start of A's NFA
-        start_transition_1 = Edge(from_=start, to_=left_nfa.start, characters={EPSILON})
+        start_transition_1 = Edge(from_=start, to_=left_nfa.start, characters=EPSILON)
 
         # For star nodes only, it also goes to the accept state directly to represent accepting an empty inputs
-        start_transition_2 = Edge(from_=start, to_=accept, characters={EPSILON})
+        start_transition_2 = Edge(from_=start, to_=accept, characters=EPSILON)
 
         # Link the accept state with the accept of A's NFA
         final_transition_1 = Edge(
-            from_=left_nfa.accept, to_=accept, characters={EPSILON}
+            from_=left_nfa.accept, to_=accept, characters=EPSILON
         )
 
         # To represent zero|one 'or more' we link the accept state of A with the new start state
         final_transition_2 = Edge(
-            from_=left_nfa.accept, to_=start, characters={EPSILON}
+            from_=left_nfa.accept, to_=start, characters=EPSILON
         )
 
         # Finalize the star or plus NFA and return it
@@ -227,14 +224,14 @@ class NFA_CLASS:
         accept = State()
 
         # Link the new start to the start of A's NFA
-        start_transition_1 = Edge(from_=start, to_=left_nfa.start, characters={EPSILON})
+        start_transition_1 = Edge(from_=start, to_=left_nfa.start, characters=EPSILON)
 
         # It also goes to the accept state directly to represent accepting an empty inputs
-        start_transition_2 = Edge(from_=start, to_=accept, characters={EPSILON})
+        start_transition_2 = Edge(from_=start, to_=accept, characters=EPSILON)
 
         # Link the accept state with the accept of A's NFA
         final_transition_1 = Edge(
-            from_=left_nfa.accept, to_=accept, characters={EPSILON}
+            from_=left_nfa.accept, to_=accept, characters=EPSILON
         )
 
         # Finalize the question mark NFA and return it
@@ -248,18 +245,15 @@ class NFA_CLASS:
 
         return NFA(start, accept, states, transitions)
 
-    def construct_literal_character_class_nfa(self, node):
-        # If we have regex 'x' for any character x or a character class [..]
-
-        is_literal = isinstance(node, LiteralCharacterAstNode)
-        chars = {node.char} if is_literal else node._class
+    def construct_literal_class_nfa(self, node):
+        # If we have regex 'x' for any character x
 
         # Create 2 new states, start and accept for the full NFA
         start = State()
         accept = State()
 
         # Single transition that goes from the starting to the accepting on the relevant characters
-        final_transition = Edge(start, accept, chars)
+        final_transition = Edge(start, accept, node.char)
 
         # Finalize the literal and character class NFA and return it
         states = [start, accept]
@@ -268,34 +262,25 @@ class NFA_CLASS:
         return NFA(start, accept, states, transitions)
 
     def AST_to_NFA(self):
-        self.nfa = self.construct_nfa(self._ast)
+        self._nfa = self.construct_nfa(self._ast)
 
     def nfa_to_json(self):
         """
         This function is used to convert the NFA to a JSON format
         """
-        nfa = self.nfa
         json_serialize = JsonSerialize()
-        self.nfa_json = json_serialize.nfa_json_serialize(nfa)
+        self._nfa_json = json_serialize.nfa_json_serialize(self._nfa)
         del json_serialize
-        # store the nfa json in a file
+        
+        # Store the nfa json in a file
         with open("nfa.json", "w") as f:
-            json.dump(self.nfa_json, f, indent=4)
+            json.dump(self._nfa_json, f, indent=4)
 
-    def nfa_visualize(self, path="./nfa.gv"):
-        json_data = self.nfa_json
+    def nfa_visualize(self, path="nfa"):
         graph_visualize = GraphVisualize()
-        if graph_visualize.graph_visualize(path, json_data):
+        if graph_visualize.graph_visualize(path, self._nfa_json):
             print(f"Visualization of the NFA is saved in {path}")
         else:
             print("Error: Visualization failed")
         del graph_visualize
 
-
-# regex = "[A-Za-z]+[0-9]*"
-# regex = "ab*c+de?(f|g|h)|mr|n|[p-qs0-9]"
-# regex = "ab"
-
-# nfa = NFA_CLASS(regex)
-# print(nfa.nfa)
-# print(nfa.nfa_json)

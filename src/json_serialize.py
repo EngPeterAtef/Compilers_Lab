@@ -22,18 +22,9 @@ class JsonSerialize:
             from_state[name] = []
 
         for transition in nfa.transitions:
-            # Get the characters that are needed for the transition
-            chars_str = []
-            for char in transition.characters:
-                if isinstance(char, tuple):
-                    chars_str.append(f"({char[0]}-{char[1]})")
-                else:
-                    chars_str.append(char)
-            chars_str = " | ".join(sorted(chars_str))
-
             # Get all the states that the transition goes to
             from_state[address_to_name[transition.from_]].append(
-                {"to": address_to_name[transition.to_], "char": chars_str}
+                {"to": address_to_name[transition.to_], "char": transition.characters}
             )
 
         # Extracting starting state

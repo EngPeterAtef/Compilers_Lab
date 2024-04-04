@@ -22,6 +22,7 @@ class GraphVisualize:
 
             for state, transitions in json_data.items():
                 if state == "startingState":
+                    graph.edge("Start", transitions)
                     continue
 
                 if transitions.get("isTerminatingState", False):
