@@ -1,7 +1,8 @@
 import re
 from parser_classes import *
-from graph_visualize import GraphVisualize 
+from graph_visualize import GraphVisualize
 from json_serialize import JsonSerialize
+
 
 class State:
     pass
@@ -283,10 +284,11 @@ class NFA_CLASS:
             print("Error: Visualization failed")
         del graph_visualize
 
+
 # regex = "[A-Za-z]+[0-9]*"
 # regex = "ab*c+de?(f|g|h)|mr|n|[p-qs0-9]"
-regex = "ab"
+# regex = "ab"
 
-nfa = NFA_CLASS(regex)
-print(nfa.nfa)
-print(nfa.nfa_json)
+# nfa = NFA_CLASS(regex)
+# print(nfa.nfa)
+# print(nfa.nfa_json)
