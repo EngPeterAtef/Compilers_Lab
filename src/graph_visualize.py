@@ -5,7 +5,7 @@ class GraphVisualize:
     def __init__(self):
         pass
 
-    def graph_visualize(self, name="graph_visualization.gv", json_data=None):
+    def graph_visualize(self, name="graph", json_data=None):
         """_summary_
         Args:
             name (str, optional): name of the file .gv. Defaults to "graph_visualization.gv".
@@ -32,9 +32,12 @@ class GraphVisualize:
                 for char, next_state in transitions.items():
                     if char == "isTerminatingState":
                         continue
-                    graph.edge(state, next_state, label=char)
+                    if "epsilon" in char:
+                        graph.edge(state, next_state, label="epsilon")
+                    else:
+                        graph.edge(state, next_state, label=char)
 
-            graph.render(name)
+            graph.render(name, format="png", cleanup=True)
             return True
         except Exception as e:
             print(f"Error: {e}")
