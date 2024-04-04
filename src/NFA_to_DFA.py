@@ -94,7 +94,6 @@ class DFA_CLASS:
         # list of states of the DFA
         states = []
         # add the start state to the list of states of the DFA
-        start_temp = State(name=",".join([state.name for state in start_set]))
         states.append(start_set)
         # list of accepting states of the DFA
         accept = []
@@ -140,7 +139,7 @@ class DFA_CLASS:
                 accept.append(states[i])
         # create a DFA object
         self._dfa = DFA(
-            start=start_temp, accept=accept, states=states, transitions=transitions
+            start=states[0], accept=accept, states=states, transitions=transitions
         )
 
     def print_dfa(self):
@@ -150,17 +149,32 @@ class DFA_CLASS:
         print("Start State: ", self._dfa.start.name)
         print("Accepting States: ", [state.name for state in self._dfa.accept])
         print("States: ", [state.name for state in self._dfa.states])
+        print("Transitions: ")
+        for transition in self._dfa.transitions:
+            print(
+                f"From: {transition.from_.name}, To: {transition.to_.name}, Characters: {transition.characters}"
+            )
 
-    def dfa_to_json(self):
+    def rename_dfa_states(self):
+        """
+        This function is used to rename the states of the DFA
+        """
+        for i, state in enumerate(self._dfa.states):
+            state.name = f"S{i}"
+
+    def dfa_to_json(self, file_path: str):
         """
         This function is used to convert the DFA to a JSON format (serialize the DFA object)
+        Args:
+            file_path (str): the path of the file that we want to store the JSON data in
+        Returns:
+            None: no return value
         """
-        nfa = self._dfa
         json_serialize = JsonSerialize()
-        self.dfa_json = json_serialize.dfa_json_serialize(nfa)
+        self.dfa_json = json_serialize.dfa_json_serialize(self._dfa)
         del json_serialize
         # store the dfa json in a file
-        with open("dfa.json", "w") as f:
+        with open(file_path, "w") as f:
             json.dump(self.dfa_json, f, indent=4)
 
     # static function
@@ -221,11 +235,14 @@ class DFA_CLASS:
         nfa.transitions = transitions
         return nfa
 
-    def visualize(self, name="./dfa.gv"):
-        json_data = self.dfa_json
+    def visualize_dfa(self, path="./dfa.gv"):
+        """_summary_
+        Args:
+            path (str, optional): Path where the gv file will be stores. Defaults to "./dfa.gv".
+        """
         graph_visualize = GraphVisualize()
-        if graph_visualize.dfa_graph_visualize(name, json_data):
-            print(f"Visualization of the DFA is saved in {name}")
+        if graph_visualize.graph_visualize(path, self.dfa_json):
+            print(f"Visualization of the DFA is saved in {path}")
         else:
             print("Error: Visualization DFA failed")
         del graph_visualize

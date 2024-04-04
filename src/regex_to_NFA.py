@@ -41,7 +41,7 @@ class NFA_CLASS:
         self.parse()
         self.AST_to_NFA()
         self.nfa_to_json()
-        self.visualize()
+        self.nfa_visualize()
 
     def check_regex(self, regex):
         """
@@ -282,11 +282,11 @@ class NFA_CLASS:
         with open("nfa.json", "w") as f:
             json.dump(self.nfa_json, f, indent=4)
 
-    def visualize(self, name="./nfa.gv"):
+    def nfa_visualize(self, path="./nfa.gv"):
         json_data = self.nfa_json
         graph_visualize = GraphVisualize()
-        if graph_visualize.nfa_graph_visualize(name, json_data):
-            print(f"Visualization of the NFA is saved in {name}")
+        if graph_visualize.graph_visualize(path, json_data):
+            print(f"Visualization of the NFA is saved in {path}")
         else:
             print("Error: Visualization failed")
         del graph_visualize

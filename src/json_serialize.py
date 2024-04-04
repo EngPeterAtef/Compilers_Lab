@@ -68,49 +68,21 @@ class JsonSerialize:
             dict: dictionary of the json data
         """
         json_data = {}
-        address_to_name = {}
-        from_state = {}
         # set the starting state in the json data
         json_data["startingState"] = dfa.start.name
 
         # loop over the states in the DFA
         for _, state in enumerate(dfa.states):
+            # loop over the transitions in the state
             json_data[state.name] = {
                 "isTerminatingState": state in dfa.accept,
             }
-
+            for transition in dfa.transitions:
+                if transition.from_ == state:
+                    json_data[state.name][
+                        "".join(list(transition.characters))
+                    ] = transition.to_.name
         return json_data
 
     def dfa_min_json_serialize(self, dfa_min):
         json_data = {}
-
-        address_to_name = {}
-        from_state = {}
-
-        for _, state in enumerate(dfa_min.states):
-            name = f"S{str(dfa_min.states.index(state))}"
-            address_to_name[state] = name
-            from_state[name] = []
-
-        for transition in dfa_min.transitions:
-            from_state[address_to_name[transition.from_]].append(
-                {"to": address_to_name[transition.to_], "char": transition.character}
-            )
-
-        # Extracting starting state
-        json_data["startingState"] = address_to_name[dfa_min.start]
-
-        for _, state in enumerate(from_state):
-            json_data[state] = {
-                "isTerminatingState": state == address_to_name[dfa_min.accept],
-            }
-
-            transitions = {}
-            for transition in from_state[state]:
-                transitions[transition["char"]] = transition["to"]
-
-            # Check if transitions is empty
-            if len(transitions) > 0:
-                json_data[state].update(transitions)
-
-        return json_data
