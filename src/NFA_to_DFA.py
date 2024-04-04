@@ -205,6 +205,7 @@ class DFA_CLASS:
         Returns:
             DFA: minimized DFA object
         """
+
         minimized_dfa = DFA(
             start=self._dfa.start,
             accept=self._dfa.accept,
