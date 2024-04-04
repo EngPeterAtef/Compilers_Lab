@@ -33,7 +33,7 @@ class NFA_CLASS:
         self._tokens = []
         self._ast = None
         self.nfa = None
-        self._nfa_json = None
+        self.nfa_json = None
 
         self.tokenize()
         self.parse()
@@ -271,11 +271,11 @@ class NFA_CLASS:
     def nfa_to_json(self):
         nfa = self.nfa
         json_serialize = JsonSerialize()
-        self._nfa_json = json_serialize.nfa_json_serialize(nfa)
+        self.nfa_json = json_serialize.nfa_json_serialize(nfa)
         del json_serialize
 
     def visualize(self, name="./nfa.gv"):
-        json_data = self._nfa_json
+        json_data = self.nfa_json
         graph_visualize = GraphVisualize()
         if graph_visualize.graph_visualize(name, json_data):
             print(f"Visualization of the NFA is saved in {name}")
@@ -288,4 +288,5 @@ class NFA_CLASS:
 regex = "ab"
 
 nfa = NFA_CLASS(regex)
-print(nfa.nfa.start)
+print(nfa.nfa)
+print(nfa.nfa_json)
