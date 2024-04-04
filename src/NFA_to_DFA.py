@@ -23,21 +23,21 @@ class Edge:
 class DFA:
     start: State
     accept: list  # list of accepting states
-
+    non_accept: list  # list of non accepting states
     # All states of the DFA including the start and accept
     states: list  # of State
     transitions: list  # of Edge
 
 
 class DFA_CLASS:
-    def __init__(self):
+    def __init__(self, dfa=None, inputs=[]):
         """_summary_
         class that contains the methods to convert NFA to DFA
         dfa: DFA object
         inputs: list of inputs of the NFA
         """
-        self._dfa = None
-        self.inputs = []
+        self._dfa = dfa
+        self.inputs = inputs
 
     def epsilon_closure(self, nfa, state):
         """_summary_
@@ -97,6 +97,8 @@ class DFA_CLASS:
         states.append(start_set)
         # list of accepting states of the DFA
         accept = []
+        # list of non accepting states of the DFA
+        non_accept = []
         # list of states that we need to visit
         to_visit = [start_set]
         # while there are states to visit
@@ -137,9 +139,16 @@ class DFA_CLASS:
             if temp.intersection({nfa.accept}):
                 # add the state to the list of accepting states of the DFA
                 accept.append(states[i])
+            else:
+                # add the state to the list of non accepting states of the DFA
+                non_accept.append(states[i])
         # create a DFA object
         self._dfa = DFA(
-            start=states[0], accept=accept, states=states, transitions=transitions
+            start=states[0],
+            accept=accept,
+            non_accept=non_accept,
+            states=states,
+            transitions=transitions,
         )
 
     def print_dfa(self):
@@ -148,6 +157,7 @@ class DFA_CLASS:
         """
         print("Start State: ", self._dfa.start.name)
         print("Accepting States: ", [state.name for state in self._dfa.accept])
+        print("Non Accepting States: ", [state.name for state in self._dfa.non_accept])
         print("States: ", [state.name for state in self._dfa.states])
         print("Transitions: ")
         for transition in self._dfa.transitions:
@@ -157,7 +167,7 @@ class DFA_CLASS:
 
     def rename_dfa_states(self):
         """
-        This function is used to rename the states of the DFA
+        This function is used to rename the states of the DFA to S0, S1, S2, ...
         """
         for i, state in enumerate(self._dfa.states):
             state.name = f"S{i}"
@@ -177,64 +187,6 @@ class DFA_CLASS:
         with open(file_path, "w") as f:
             json.dump(self.dfa_json, f, indent=4)
 
-    # static function
-    @staticmethod
-    def json_to_dfa(json_path: str) -> DFA:
-        """
-        This function is used to convert the JSON data to DFA
-        params:
-            json_path: str: Path to the JSON file
-        return:
-            DFA: DFA object
-        """
-        # read the JSON file
-        with open(json_path, "r") as file:
-            json_data = json.load(file)
-        # create the DFA object
-        nfa = DFA(None, None, [], [])
-        # create the states
-        states = []
-        acceping_index = 0
-        for state in json_data:
-            if state == "startingState":
-                continue
-            if json_data[state]["isTerminatingState"] == True:
-                acceping_index = int(state[1:])
-            states.append(State())
-        nfa.states = states
-        # set the start state becuase the name of the starting states is the index of it inside the states array
-        nfa.start = states[int(json_data["startingState"][1:])]
-        # set the accept state
-        nfa.accept = states[acceping_index]
-        # create the transitions
-        transitions = []
-        for state in json_data:
-            if state == "startingState":
-                continue
-            for transition in json_data[state]:
-                if transition == "isTerminatingState":
-                    continue
-
-                # check if the transition is epsilon or not
-                if transition.startswith("epsilon"):
-                    transitions.append(
-                        Edge(
-                            states[int(state[1:])],
-                            states[int(json_data[state][transition][1:])],
-                            {EPSILON},
-                        )
-                    )
-                else:
-                    transitions.append(
-                        Edge(
-                            states[int(state[1:])],
-                            states[int(json_data[state][transition][1:])],
-                            {transition},
-                        )
-                    )
-        nfa.transitions = transitions
-        return nfa
-
     def visualize_dfa(self, path="./dfa.gv"):
         """_summary_
         Args:
@@ -246,3 +198,12 @@ class DFA_CLASS:
         else:
             print("Error: Visualization DFA failed")
         del graph_visualize
+
+    def minimize_dfa(self) -> DFA:
+        """_summary_
+        This function is used to minimize the DFA
+        Returns:
+            DFA: minimized DFA object
+        """
+        minimized_dfa = DFA()
+        return minimized_dfa
