@@ -185,7 +185,7 @@ class DFA_CLASS:
         with open(file_path, "w") as f:
             json.dump(self.dfa_json, f, indent=4)
 
-    def visualize_dfa(self, path="./dfa.gv"):
+    def visualize_dfa(self, path="./dfa"):
         """_summary_
         Args:
             path (str, optional): Path where the gv file will be stores. Defaults to "./dfa.gv".
