@@ -50,10 +50,6 @@ class QuestionMarkAstNode(AstNode):
 class LiteralCharacterAstNode(AstNode):
     char: str
 
-@dataclass
-class CharacterClassAstNode(AstNode):
-    _class: set # of strs and pairs
-
 
 def parse_regex(tokens, current_token):
     """
@@ -214,4 +210,18 @@ def parse_sq_bracket_content(tokens, current_token):
     if is_dash_reached:
         raise Exception("Wrong range format")
     
-    return CharacterClassAstNode(set(chars)), current_token
+    # Handle the cases like [a-z b 0-5] should be like (a-z | b | 0-5)
+    expression = None
+    for char in chars:
+        if isinstance(char, tuple):
+            if expression is None:
+                expression = LiteralCharacterAstNode(char=f"{char[0]}-{char[1]}")
+            else:
+                expression = OrAstNode(left=expression, right=LiteralCharacterAstNode(char=f"{char[0]}-{char[1]}"))
+        else:
+            if expression is None:
+                expression = LiteralCharacterAstNode(char=char)
+            else:
+                expression = OrAstNode(left=expression, right=LiteralCharacterAstNode(char=char))
+    
+    return expression, current_token
