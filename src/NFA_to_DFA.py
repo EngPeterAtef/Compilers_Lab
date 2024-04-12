@@ -217,6 +217,7 @@ class DFA_CLASS:
         if non_accept:
             # add the non accepting states to the current state of the DFA
             pi.append(set(non_accept))
+        print("Initial Partition: ", pi)
         # flag to tell if there is a change in the partition
         change = True
         while change:
@@ -241,7 +242,7 @@ class DFA_CLASS:
                                         state_transition_table[input_] = set()
                                     state_transition_table[input_].add(transition.to_)
                         str_temp = str(state_transition_table)
-                        # print("Transition Table/: ", str_temp)
+                        print("Transition Table: ", str_temp)
                         if str_temp not in splitted_states:
                             splitted_states[str_temp] = set()
                         splitted_states[str_temp].add(state)
@@ -250,6 +251,7 @@ class DFA_CLASS:
                     if len(splitted_states) > 1:
                         # change is True to check on the new partitions
                         change = True
+                        print("Splitted States: ", splitted_states)
                         # add the splited states to the new partition
                         for value in splitted_states.values():
                             new_pi.append(set(value))
@@ -257,6 +259,10 @@ class DFA_CLASS:
                         # if there is only one transition table for the group
                         # add the group to the new partition
                         new_pi.append(group)
+                else:
+                    # if the group contains only one state
+                    # add the group to the new partition
+                    new_pi.append(group)
             # if there is a change in the partition
             if change:
                 pi = new_pi
