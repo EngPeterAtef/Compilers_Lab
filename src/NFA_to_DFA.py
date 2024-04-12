@@ -5,7 +5,7 @@ import json
 
 
 @dataclass
-class State:
+class DfaState:
     name: str = None
 
     def __hash__(self) -> int:
@@ -13,15 +13,15 @@ class State:
 
 
 @dataclass
-class Edge:
-    from_: State
-    to_: State
+class DfaEdge:
+    from_: DfaState
+    to_: DfaState
     characters: set  # of chars (literals, epsilon) and pairs of chars (for ranges)
 
 
 @dataclass
 class DFA:
-    start: State
+    start: DfaState
     accept: list  # list of accepting states
     non_accept: list  # list of non accepting states
     # All states of the DFA including the start and accept
@@ -120,13 +120,13 @@ class DFA_CLASS:
                         to_visit.append(move)
                     # add the transition from the current state to the move set using the input
                     transitions.append(
-                        Edge(from_=current_state, to_=move, characters={input_})
+                        DfaEdge(from_=current_state, to_=move, characters={input_})
                     )
 
         # we need to convert every set of states to a state object
         for i, state in enumerate(states):
             temp = state
-            states[i] = State(name=",".join([state.name for state in state]))
+            states[i] = DfaState(name=",".join([state.name for state in state]))
             # loop over the transitions to update the from_ and to_ states
             for transition in transitions:
                 if transition.from_ == temp:
@@ -205,13 +205,18 @@ class DFA_CLASS:
         Returns:
             DFA: minimized DFA object
         """
+        # the current state of the DFA
+        pi = []
         # list of accepting states of the DFA
         accept = self._dfa.accept
+        if accept:
+            # add the accepting states to the current state of the DFA
+            pi.append(set(accept))
         # list of non accepting states of the DFA
         non_accept = self._dfa.non_accept
-        # the current state of the DFA
-        pi = [set(accept), set(non_accept)]
-        # print("Initial Partition: ", pi)
+        if non_accept:
+            # add the non accepting states to the current state of the DFA
+            pi.append(set(non_accept))
         # flag to tell if there is a change in the partition
         change = True
         while change:
@@ -266,9 +271,10 @@ class DFA_CLASS:
         min_non_accept = []
         # start state of the minimized DFA
         start = None
+        print("Final Partition: ", pi)
         # create the state sof the minimized DFA
         for i, group in enumerate(pi):
-            state = State(name=f"S{i}")
+            state = DfaState(name=f"S{i}")
             min_states.append(state)
             if group.intersection(self._dfa.accept):
                 min_accept.append(state)
@@ -285,7 +291,7 @@ class DFA_CLASS:
                 if transition.to_ in group:
                     to_ = min_states[i]
             min_transitions.append(
-                Edge(from_=from_, to_=to_, characters=transition.characters)
+                DfaEdge(from_=from_, to_=to_, characters=transition.characters)
             )
         # create a DFA object for the minimized DFA
         minimized_dfa = DFA(

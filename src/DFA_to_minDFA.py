@@ -1,2 +1,0 @@
-class MinDFA():
-    pass
